@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Drift Note Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Fredoka:wght@300;400;500;600;700&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #011111;
+            --lime: #bfff00;
+            --text-light: #eefff4;
+        }
+
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: 'Space Grotesk', sans-serif;
+            overscroll-behavior: none;
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .app-container {
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @media (min-width: 768px) {
+            .app-container { flex-direction: row; }
+        }
+
+        /* Preview Section */
+        .preview-section {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+            padding: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Constant High-Contrast Background */
+        .gradient-bg {
+            background: 
+                radial-gradient(circle at 10% 10%, rgba(191, 255, 0, 0.15) 0%, transparent 45%),
+                linear-gradient(165deg, #011111 0%, #011d1d 100%);
+            box-shadow: 0 50px 100px -20px rgba(0, 0, 0, 1);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow: hidden;
+            padding: 15% 12%;
+            transition: all 0.4s ease;
+        }
+
+        .aspect-4-5 { aspect-ratio: 4 / 5; height: 100%; max-height: 80vh; width: auto; }
+        .aspect-9-16 { aspect-ratio: 9 / 16; height: 100%; max-height: 85vh; width: auto; }
+
+        @media (max-width: 768px) {
+            .aspect-4-5 { max-height: 35vh; }
+            .aspect-9-16 { max-height: 40vh; }
+        }
+
+        /* Typography */
+        .quote-text {
+            color: var(--text-light);
+            line-height: 1.05;
+            transition: font-size 0.2s, font-weight 0.2s;
+        }
+
+        /* Rectangle Alignment Logic */
+        .align-justify {
+            text-align: justify;
+            text-align-last: justify;
+            text-justify: inter-word;
+            text-wrap: wrap !important; /* Forces block shape */
+        }
+
+        .highlight { 
+            color: var(--lime); 
+            text-shadow: 0 0 20px rgba(191, 255, 0, 0.3);
+        }
+
+        .word-btn {
+            cursor: pointer;
+            display: inline-block;
+            margin-right: 0.1em;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Mobile Controls Sheet */
+        .controls-section {
+            background: #080808;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            z-index: 50;
+        }
+
+        @media (max-width: 768px) {
+            .controls-section {
+                height: 55dvh;
+                border-top-left-radius: 2.5rem;
+                border-top-right-radius: 2.5rem;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .controls-section {
+                width: 400px;
+                height: 100%;
+                border-top: none;
+                border-right: 1px solid rgba(255,255,255,0.05);
+            }
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            height: 2px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--lime);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(191, 255, 0, 0.4);
+        }
+
+        .controls-area::-webkit-scrollbar { display: none; }
+
+        .link-icon {
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px;
+            color: var(--lime);
+            width: 14px;
+            height: 14px;
+        }
+    </style>
+</head>
+<body class="bg-black">
+
+    <div class="app-container">
+        
+        <!-- Preview -->
+        <main class="preview-section">
+            <div id="exportContainer" class="gradient-bg aspect-4-5">
+                <!-- Top Branding -->
+                <div class="absolute top-8 left-0 right-0 text-center pointer-events-none">
+                    <span class="text-[9px] tracking-[0.6em] font-bold text-[#eefff4] opacity-30">DRIFT NOTE</span>
+                </div>
+
+                <!-- Minimalism Details -->
+                <div class="absolute top-10 left-10 w-6 h-6 border-l border-t border-[#bfff00]/20 pointer-events-none"></div>
+                <div class="absolute bottom-10 right-10 w-6 h-6 border-r border-b border-[#bfff00]/20 pointer-events-none"></div>
+                
+                <div id="quoteDisplay" class="quote-text font-bold text-[38px] tracking-tight text-center">
+                    <!-- Text -->
+                </div>
+
+                <div id="authorDisplay" class="mt-8 text-[11px] font-medium tracking-[0.2em] uppercase opacity-60 text-center flex items-center justify-center" style="color: var(--text-light)">
+                    <!-- Signature -->
+                </div>
+
+                <!-- Bottom Branding -->
+                <div class="absolute bottom-8 left-0 right-0 text-center pointer-events-none">
+                    <span class="text-[9px] tracking-[0.8em] font-bold opacity-30 text-[#eefff4]">SIRNEWSON.COM</span>
+                </div>
+            </div>
+        </main>
+
+        <!-- Controls -->
+        <aside class="controls-section flex flex-col">
+            <!-- Header -->
+            <div class="px-8 py-5 flex justify-between items-center border-b border-white/5">
+                <div>
+                    <h1 class="text-xs font-black tracking-[0.4em] text-[#bfff00] uppercase">STUDIO</h1>
+                    <p class="text-[8px] text-gray-500 uppercase tracking-widest font-bold">BY SIR NEWSON</p>
+                </div>
+                <div id="charCount" class="text-[10px] font-mono text-gray-600 bg-white/5 px-3 py-1 rounded-full">0/280</div>
+            </div>
+
+            <!-- Panel -->
+            <div class="controls-area flex-1 overflow-y-auto px-8 py-6 space-y-8 pb-20">
+                <!-- Text Area -->
+                <div class="space-y-3">
+                    <label class="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-500">The Prose</label>
+                    <textarea id="quoteInput" maxlength="280" class="w-full bg-white/[0.02] border border-white/10 rounded-xl p-4 text-sm text-white focus:border-[#bfff00] focus:outline-none transition-all resize-none min-h-[90px]" placeholder="Your thought..."></textarea>
+                </div>
+
+                <!-- Identity Toggle -->
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <label class="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-500">Identity</label>
+                        <div class="flex bg-white/5 p-1 rounded-lg">
+                            <button onclick="setSigType('name')" id="typeBtnName" class="px-4 py-1.5 text-[9px] uppercase font-bold bg-white/10 rounded-md transition-all">SIGNATURE</button>
+                            <button onclick="setSigType('domain')" id="typeBtnDomain" class="px-4 py-1.5 text-[9px] uppercase font-bold text-gray-500 rounded-md transition-all">WEBSITE</button>
+                        </div>
+                    </div>
+                    <input id="authorInput" type="text" class="w-full bg-white/[0.02] border border-white/10 rounded-xl p-4 text-sm text-white focus:border-[#bfff00] focus:outline-none" placeholder="Enter name or URL...">
+                </div>
+
+                <!-- Font & Weight -->
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="space-y-3">
+                        <label class="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-500">Font</label>
+                        <select id="fontSelect" onchange="setFont(this.value)" class="w-full bg-white/[0.02] border border-white/10 rounded-xl p-3.5 text-xs focus:outline-none appearance-none">
+                            <option value="'Space Grotesk', sans-serif">MODERN</option>
+                            <option value="'Fredoka', sans-serif">PLAYFUL</option>
+                            <option value="'Caveat', cursive">HANDWRITTEN</option>
+                        </select>
+                    </div>
+                    <div class="space-y-3">
+                        <label class="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-500">Weight</label>
+                        <div class="pt-4 px-1">
+                            <input type="range" id="fontWeight" min="300" max="700" step="100" value="700" class="w-full">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scale & Aspect -->
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="space-y-3">
+                        <label class="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-500">Ratio</label>
+                        <select id="ratioSelect" onchange="setRatio(this.value)" class="w-full bg-white/[0.02] border border-white/10 rounded-xl p-3.5 text-xs focus:outline-none appearance-none">
+                            <option value="4-5">4:5 FEED</option>
+                            <option value="9-16">9:16 STORY</option>
+                        </select>
+                    </div>
+                    <div class="space-y-3">
+                        <label class="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-500">Scale</label>
+                        <div class="pt-4 px-1">
+                            <input type="range" id="fontSize" min="16" max="96" value="38" class="w-full">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alignment -->
+                <div class="space-y-3">
+                    <label class="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-500">Composition</label>
+                    <div class="grid grid-cols-4 gap-2 p-1 bg-white/5 rounded-xl">
+                        <button onclick="setAlign('left', this)" class="py-3 text-[9px] font-bold text-gray-500 transition-all rounded-lg">LEFT</button>
+                        <button onclick="setAlign('center', this)" class="py-3 text-[9px] font-bold text-white bg-white/10 rounded-lg">CENTER</button>
+                        <button onclick="setAlign('right', this)" class="py-3 text-[9px] font-bold text-gray-500 transition-all rounded-lg">RIGHT</button>
+                        <button onclick="setAlign('justify', this)" class="py-3 text-[9px] font-bold text-gray-500 transition-all rounded-lg">BLOCK</button>
+                    </div>
+                </div>
+
+                <!-- Download -->
+                <div class="pt-4">
+                    <button onclick="downloadImage()" class="w-full py-5 bg-[#bfff00] text-black font-black uppercase tracking-[0.4em] text-[10px] rounded-2xl shadow-2xl shadow-[#bfff00]/20 active:scale-[0.97] transition-all">
+                        CAPTURE FRAME
+                    </button>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        const quoteInput = document.getElementById('quoteInput');
+        const authorInput = document.getElementById('authorInput');
+        const quoteDisplay = document.getElementById('quoteDisplay');
+        const authorDisplay = document.getElementById('authorDisplay');
+        const exportContainer = document.getElementById('exportContainer');
+        const fontSizeInput = document.getElementById('fontSize');
+        const weightInput = document.getElementById('fontWeight');
+        const charCount = document.getElementById('charCount');
+
+        let highlightedIndices = new Set();
+        let currentRatio = '4-5';
+        let sigType = 'name';
+
+        // Initial Content
+        quoteInput.value = "THE DETAILS ARE NOT THE DETAILS. THEY MAKE THE DESIGN.";
+        authorInput.value = "Sir Newson";
+
+        function updatePreview() {
+            const text = quoteInput.value.trim() || "A moment of clarity.";
+            const words = text.split(/\s+/);
+            
+            charCount.innerText = `${quoteInput.value.length}/280`;
+            charCount.style.color = quoteInput.value.length > 250 ? '#ff4444' : '#666';
+
+            quoteDisplay.innerHTML = '';
+            words.forEach((word, index) => {
+                const span = document.createElement('span');
+                span.innerText = word;
+                span.className = 'word-btn ' + (highlightedIndices.has(index) ? 'highlight' : '');
+                
+                span.onpointerdown = (e) => {
+                    e.preventDefault();
+                    toggleHighlight(index);
+                };
+                
+                quoteDisplay.appendChild(span);
+                quoteDisplay.appendChild(document.createTextNode(' '));
+            });
+
+            if (sigType === 'domain') {
+                const domain = authorInput.value.toUpperCase().replace(/\s+/g, '');
+                authorDisplay.innerHTML = `<svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>${domain || 'SIRNEWSON.COM'}`;
+            } else {
+                authorDisplay.innerText = authorInput.value ? `— ${authorInput.value}` : '';
+            }
+        }
+
+        function setSigType(type) {
+            sigType = type;
+            const btnName = document.getElementById('typeBtnName');
+            const btnDomain = document.getElementById('typeBtnDomain');
+            
+            if (type === 'name') {
+                btnName.classList.add('bg-white/10', 'text-white');
+                btnName.classList.remove('text-gray-500');
+                btnDomain.classList.remove('bg-white/10', 'text-white');
+                btnDomain.classList.add('text-gray-500');
+            } else {
+                btnDomain.classList.add('bg-white/10', 'text-white');
+                btnDomain.classList.remove('text-gray-500');
+                btnName.classList.remove('bg-white/10', 'text-white');
+                btnName.classList.add('text-gray-500');
+            }
+            updatePreview();
+        }
+
+        function toggleHighlight(index) {
+            if (highlightedIndices.has(index)) highlightedIndices.delete(index);
+            else highlightedIndices.add(index);
+            updatePreview();
+        }
+
+        function setRatio(ratio) {
+            currentRatio = ratio;
+            exportContainer.className = `gradient-bg relative flex flex-col justify-center overflow-hidden transition-all duration-500 aspect-${ratio}`;
+        }
+
+        function setFont(font) {
+            quoteDisplay.style.fontFamily = font;
+        }
+
+        function setAlign(align, btn) {
+            quoteDisplay.classList.remove('align-justify');
+            quoteDisplay.style.textAlign = align;
+            authorDisplay.style.textAlign = align === 'justify' ? 'center' : align;
+
+            if (align === 'justify') {
+                quoteDisplay.classList.add('align-justify');
+                quoteDisplay.style.textWrap = 'wrap';
+            } else {
+                quoteDisplay.style.textWrap = 'balance';
+            }
+            
+            const btns = btn.parentElement.querySelectorAll('button');
+            btns.forEach(b => {
+                b.classList.remove('bg-white/10', 'text-white');
+                b.classList.add('text-gray-500');
+            });
+            btn.classList.add('bg-white/10', 'text-white');
+            btn.classList.remove('text-gray-500');
+        }
+
+        fontSizeInput.oninput = (e) => {
+            quoteDisplay.style.fontSize = `${e.target.value}px`;
+        };
+
+        weightInput.oninput = (e) => {
+            quoteDisplay.style.fontWeight = e.target.value;
+        };
+
+        quoteInput.oninput = updatePreview;
+        authorInput.oninput = updatePreview;
+
+        async function downloadImage() {
+            const btn = event.currentTarget;
+            const original = btn.innerText;
+            btn.innerText = "CAPTURING...";
+            btn.disabled = true;
+
+            try {
+                const canvas = await html2canvas(exportContainer, {
+                    scale: 3, 
+                    backgroundColor: '#011111',
+                    useCORS: true,
+                    logging: false
+                });
+
+                const link = document.createElement('a');
+                link.download = `drift-${Date.now()}.png`;
+                link.href = canvas.toDataURL('image/png', 1.0);
+                link.click();
+            } catch (err) {
+                console.error("Export Error", err);
+            } finally {
+                btn.innerText = original;
+                btn.disabled = false;
+            }
+        }
+
+        // Initialize
+        updatePreview();
+        quoteDisplay.style.fontSize = "38px";
+        quoteDisplay.style.textAlign = "center";
+        authorDisplay.style.textAlign = "center";
+    </script>
+</body>
+</html>
