@@ -3,407 +3,411 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Drift Note Studio</title>
+    <title>Wynmind Studio</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Fredoka:wght@300;400;500;600;700&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=JetBrains+Mono:wght@400;700&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-dark: #011111;
-            --lime: #bfff00;
-            --text-light: #eefff4;
-            /* Light Mode UI Variables */
+            --wyn-dark: #1c2c1a;
+            --wyn-lime: #8eb500;
+            --wyn-white: #ffffff;
             --ui-bg: #ffffff;
-            --ui-bg-subtle: #f8f8f8;
-            --ui-text: #111111;
-            --ui-text-dim: #666666;
-            --ui-border: #e5e5e5;
+            --ui-border: #f1f5f9;
+            --ui-text: #1c2c1a;
+            --frame-text-color: var(--wyn-white);
         }
 
         body {
-            background-color: #f0f0f2;
+            background-color: #f8fafc;
             color: var(--ui-text);
-            font-family: 'Space Grotesk', sans-serif;
+            font-family: 'DM Sans', sans-serif;
             overscroll-behavior: none;
             height: 100dvh;
             display: flex;
             flex-direction: column;
         }
 
-        .app-container {
-            height: 100dvh;
-            display: flex;
-            flex-direction: column;
-        }
+        .app-container { height: 100dvh; display: flex; flex-direction: column; }
+        @media (min-width: 768px) { .app-container { flex-direction: row; } }
 
-        @media (min-width: 768px) {
-            .app-container { flex-direction: row; }
-        }
-
-        /* Preview Section */
         .preview-section {
             flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #f0f0f2;
-            padding: 20px;
+            background: #e2e8f0;
+            padding: 16px;
             overflow: hidden;
             position: relative;
         }
 
-        /* Generated Frame Style - REMAINING DARK */
-        .gradient-bg {
-            background: 
-                radial-gradient(circle at 10% 10%, rgba(191, 255, 0, 0.15) 0%, transparent 45%),
-                linear-gradient(165deg, #011111 0%, #011d1d 100%);
-            box-shadow: 0 50px 100px -20px rgba(0, 0, 0, 0.4);
+        .export-frame {
             position: relative;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             overflow: hidden;
-            padding: 12% 5%; /* Reduced side padding to allow slider to take control */
-            transition: all 0.4s ease;
+            padding: 0 10%;
+            transition: background 0.5s ease;
+            box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.3);
+            background-size: cover;
+            background-position: center;
         }
 
-        .aspect-4-5 { aspect-ratio: 4 / 5; height: 100%; max-height: 80vh; width: auto; }
-        .aspect-9-16 { aspect-ratio: 9 / 16; height: 100%; max-height: 85vh; width: auto; }
+        .export-frame::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.1);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .frame-dark-overlay::after { background: rgba(0,0,0,0.35); }
+        .frame-light-overlay::after { background: rgba(255,255,255,0.1); }
+
+        .aspect-4-5 { aspect-ratio: 4 / 5; height: 100%; max-height: 75vh; width: auto; }
+        .aspect-9-16 { aspect-ratio: 9 / 16; height: 100%; max-height: 80vh; width: auto; }
 
         @media (max-width: 768px) {
-            .aspect-4-5 { max-height: 35vh; }
-            .aspect-9-16 { max-height: 40vh; }
+            .aspect-4-5 { max-height: 42vh; width: 85vw; }
+            .aspect-9-16 { max-height: 48vh; width: 70vw; }
         }
 
-        /* Typography inside frame */
+        .content-movable {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            transition: transform 0.1s linear;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
         .quote-text {
-            color: var(--text-light);
-            transition: font-size 0.2s, font-weight 0.2s, line-height 0.2s, letter-spacing 0.2s, width 0.2s;
-            width: 90%; /* Initial width */
+            color: var(--frame-text-color);
+            width: 100%;
+            text-wrap: balance;
+            transition: all 0.2s ease;
         }
 
-        /* Rectangle Alignment Logic */
-        .align-justify {
+        .quote-text.align-justify {
             text-align: justify;
-            text-align-last: justify;
+            text-align-last: center;
             text-justify: inter-word;
-            text-wrap: wrap !important;
+            text-wrap: wrap;
         }
 
         .highlight { 
-            color: var(--lime); 
-            text-shadow: 0 0 20px rgba(191, 255, 0, 0.3);
+            color: var(--wyn-lime) !important;
         }
-
+        
         .word-btn {
             cursor: pointer;
             display: inline-block;
-            margin-right: 0.1em;
+            margin-right: 0.12em;
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* Controls Section - UPDATED TO LIGHT MODE */
-        .controls-section {
-            background: var(--ui-bg);
-            border-top: 1px solid var(--ui-border);
-            z-index: 50;
-        }
-
-        @media (max-width: 768px) {
-            .controls-section {
-                height: 55dvh;
-                border-top-left-radius: 2.5rem;
-                border-top-right-radius: 2.5rem;
-                box-shadow: 0 -10px 30px rgba(0,0,0,0.05);
-            }
-        }
-
-        @media (min-width: 768px) {
-            .controls-section {
-                width: 420px;
-                height: 100%;
-                border-top: none;
-                border-right: 1px solid var(--ui-border);
-            }
-        }
-
-        input[type="range"] {
-            -webkit-appearance: none;
-            height: 2px;
-            background: #e0e0e0;
-            border-radius: 2px;
-            outline: none;
-        }
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 14px;
-            height: 14px;
-            background: var(--lime);
-            border: 2px solid #fff;
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-        }
+        .controls-section { background: var(--ui-bg); border-top: 1px solid var(--ui-border); z-index: 50; }
+        @media (max-width: 768px) { .controls-section { height: 55dvh; border-top-left-radius: 2.5rem; border-top-right-radius: 2.5rem; } }
+        @media (min-width: 768px) { .controls-section { width: 460px; height: 100%; border-left: 1px solid var(--ui-border); } }
 
         .controls-area::-webkit-scrollbar { display: none; }
 
-        .link-icon {
-            display: inline-block;
-            vertical-align: middle;
-            margin-right: 8px;
-            color: #000;
-            width: 14px;
-            height: 14px;
-        }
+        input[type="range"] { -webkit-appearance: none; height: 4px; background: #f1f5f9; border-radius: 4px; outline: none; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; background: var(--wyn-lime); border: 3px solid #fff; border-radius: 50%; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
 
-        /* UI Input Styles */
-        .ui-input {
-            background: var(--ui-bg-subtle);
-            border: 1px solid var(--ui-border);
-            color: var(--ui-text);
-        }
-        .ui-input:focus {
-            border-color: #000;
-            background: #fff;
-        }
+        .ui-input { background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 1rem; padding: 1rem; font-size: 0.875rem; width: 100%; transition: border 0.2s; }
+        .ui-input:focus { outline: none; border-color: var(--wyn-lime); }
+        
+        .btn-toggle { background: #f8fafc; color: #94a3b8; font-weight: 700; transition: all 0.2s; border-radius: 0.75rem; }
+        .btn-toggle.active { background: var(--wyn-dark); color: #fff; }
 
-        .btn-toggle {
-            background: var(--ui-bg-subtle);
-            color: var(--ui-text-dim);
-        }
-        .btn-toggle.active {
-            background: #000;
-            color: #fff;
-        }
+        .bg-thumbnail { width: 100%; aspect-ratio: 1; border-radius: 12px; background-size: cover; cursor: pointer; border: 3px solid transparent; }
+        .bg-thumbnail.active { border-color: var(--wyn-lime); transform: scale(0.95); }
+        
+        /* Checkbox Style */
+        .toggle-switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #e2e8f0; transition: .4s; border-radius: 20px; }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--wyn-lime); }
+        input:checked + .slider:before { transform: translateX(20px); }
     </style>
 </head>
-<body class="bg-gray-100">
+<body>
 
     <div class="app-container">
         
-        <!-- Preview -->
+        <!-- Preview Area -->
         <main class="preview-section">
-            <div id="exportContainer" class="gradient-bg aspect-4-5">
-                <!-- Top Branding -->
-                <div class="absolute top-8 left-0 right-0 text-center pointer-events-none">
-                    <span class="text-[9px] tracking-[0.6em] font-bold text-[#eefff4] opacity-30">DRIFT NOTE</span>
-                </div>
-
-                <!-- Minimalism Details -->
-                <div class="absolute top-10 left-10 w-6 h-6 border-l border-t border-[#bfff00]/20 pointer-events-none"></div>
-                <div class="absolute bottom-10 right-10 w-6 h-6 border-r border-b border-[#bfff00]/20 pointer-events-none"></div>
+            <div id="exportContainer" class="export-frame aspect-4-5" style="background-color: #1c2c1a;">
                 
-                <div id="quoteDisplay" class="quote-text font-bold text-[32px] tracking-tight text-center leading-[1.05]">
-                    <!-- Text -->
+                <!-- Branding Header -->
+                <div class="absolute top-12 left-0 right-0 flex flex-col items-center pointer-events-none z-20">
+                    <img src="https://i.ibb.co/8L1v84zn/normal-logo.png" alt="Wynmind" class="brightness-0 invert opacity-90 transition-all" id="frameLogo" style="height: 28px;">
+                </div>
+                
+                <!-- Movable Content Wrapper -->
+                <div id="contentMovable" class="content-movable">
+                    <div id="quoteDisplay" class="quote-text font-bold text-[32px] tracking-tight text-center leading-[1.05] lowercase"></div>
+                    <div id="authorDisplay" class="mt-10 text-[11px] font-bold tracking-[0.2em] uppercase opacity-80 text-center flex items-center justify-center transition-all" style="color: var(--frame-text-color)"></div>
                 </div>
 
-                <div id="authorDisplay" class="mt-8 text-[11px] font-medium tracking-[0.2em] uppercase opacity-60 text-center flex items-center justify-center" style="color: var(--text-light)">
-                    <!-- Signature -->
-                </div>
-
-                <!-- Bottom Branding -->
-                <div class="absolute bottom-8 left-0 right-0 text-center pointer-events-none">
-                    <span class="text-[9px] tracking-[0.8em] font-bold opacity-30 text-[#eefff4]">SIRNEWSON.COM</span>
+                <!-- Branding Footer -->
+                <div class="absolute bottom-10 left-0 right-0 text-center pointer-events-none z-20">
+                    <span class="text-[10px] tracking-[0.5em] font-black uppercase opacity-40" style="color: var(--frame-text-color)">wynmind.com</span>
                 </div>
             </div>
         </main>
 
-        <!-- Controls -->
+        <!-- Controls Sidebar -->
         <aside class="controls-section flex flex-col">
-            <!-- Header -->
-            <div class="px-8 py-5 flex justify-between items-center border-b border-gray-100">
-                <div>
-                    <h1 class="text-xs font-black tracking-[0.4em] text-black uppercase">STUDIO</h1>
-                    <p class="text-[8px] text-gray-400 uppercase tracking-widest font-bold">PARAGRAPH MODE</p>
-                </div>
-                <div id="charCount" class="text-[10px] font-mono text-gray-400 bg-gray-50 px-3 py-1 rounded-full">0/400</div>
+            <div class="px-8 py-5 flex justify-between items-center border-b border-slate-50">
+                <h1 class="text-xs font-black tracking-[0.3em] text-slate-900 uppercase">Wynmind Studio</h1>
+                <div id="charCount" class="text-[10px] font-mono text-slate-400 bg-slate-50 px-3 py-1 rounded-full border border-slate-100">0/450</div>
             </div>
 
-            <!-- Panel -->
-            <div class="controls-area flex-1 overflow-y-auto px-8 py-6 space-y-8 pb-20">
-                <!-- Text Area -->
+            <div class="controls-area flex-1 overflow-y-auto px-8 py-6 space-y-8 pb-32">
+                
+                <!-- Content Input -->
                 <div class="space-y-3">
-                    <label class="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-400">The Prose</label>
-                    <textarea id="quoteInput" maxlength="400" class="ui-input w-full rounded-xl p-4 text-sm focus:outline-none transition-all resize-none min-h-[120px]" placeholder="Your paragraph..."></textarea>
+                    <label class="text-[10px] font-black uppercase tracking-widest text-slate-400">The Message</label>
+                    <textarea id="quoteInput" maxlength="450" class="ui-input resize-none min-h-[100px] font-medium" placeholder="Share your insight..."></textarea>
                 </div>
 
-                <!-- Identity Toggle -->
-                <div class="space-y-4">
+                <!-- Logo Style Selector -->
+                <div class="space-y-3">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-slate-400">Branding Layout</label>
+                    <div class="flex gap-2 p-1 bg-slate-50 rounded-2xl">
+                        <button onclick="setLogoStyle('normal', this)" class="btn-toggle active flex-1 py-3 text-[9px]">NORMAL LOGO</button>
+                        <button onclick="setLogoStyle('wide', this)" class="btn-toggle flex-1 py-3 text-[9px]">WIDE LOGO</button>
+                    </div>
+                </div>
+
+                <!-- Attribution Section -->
+                <div class="space-y-4 bg-slate-50 p-5 rounded-3xl">
                     <div class="flex justify-between items-center">
-                        <label class="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-400">Identity</label>
-                        <div class="flex bg-gray-100 p-1 rounded-lg">
-                            <button onclick="setSigType('name')" id="typeBtnName" class="btn-toggle active px-4 py-1.5 text-[9px] uppercase font-bold rounded-md transition-all">SIGNATURE</button>
-                            <button onclick="setSigType('domain')" id="typeBtnDomain" class="btn-toggle px-4 py-1.5 text-[9px] uppercase font-bold rounded-md transition-all">WEBSITE</button>
+                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400">Attribution</label>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[9px] font-bold text-slate-400 uppercase">Show</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="showAuthor" checked onchange="updatePreview()">
+                                <span class="slider"></span>
+                            </label>
                         </div>
                     </div>
-                    <input id="authorInput" type="text" class="ui-input w-full rounded-xl p-4 text-sm focus:outline-none" placeholder="Enter name or URL...">
+                    <input id="authorInput" type="text" class="ui-input border-slate-100 bg-white" placeholder="Wynmind Team">
                 </div>
 
-                <!-- Core Typography -->
-                <div class="grid grid-cols-2 gap-6">
-                    <div class="space-y-3">
-                        <label class="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-400">Font</label>
-                        <select id="fontSelect" onchange="setFont(this.value)" class="ui-input w-full rounded-xl p-3.5 text-xs focus:outline-none appearance-none">
-                            <option value="'Space Grotesk', sans-serif">MODERN</option>
-                            <option value="'Fredoka', sans-serif">PLAYFUL</option>
-                            <option value="'Caveat', cursive">HANDWRITTEN</option>
-                        </select>
-                    </div>
-                    <div class="space-y-3">
-                        <label class="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-400">Weight</label>
-                        <div class="pt-4 px-1">
-                            <input type="range" id="fontWeight" min="300" max="700" step="100" value="700" class="w-full">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Advanced Typography Slider Pack -->
-                <div class="space-y-6 bg-gray-50 p-6 rounded-2xl border border-gray-100">
-                    <label class="text-[9px] font-bold uppercase tracking-[0.4em] text-gray-400 block mb-2">Refinement</label>
-                    <div class="space-y-4">
-                        <div class="flex justify-between items-center">
-                            <span class="text-[8px] uppercase font-bold text-gray-400">Scale</span>
-                            <input type="range" id="fontSize" min="12" max="80" value="32" class="w-[70%]">
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-[8px] uppercase font-bold text-gray-400">Width</span>
-                            <input type="range" id="textWidth" min="50" max="100" value="90" class="w-[70%]">
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-[8px] uppercase font-bold text-gray-400">Height</span>
-                            <input type="range" id="lineHeight" min="0.8" max="2.0" step="0.05" value="1.05" class="w-[70%]">
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-[8px] uppercase font-bold text-gray-400">Spacing</span>
-                            <input type="range" id="letterSpacing" min="-0.1" max="0.3" step="0.01" value="-0.02" class="w-[70%]">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Layout Options -->
-                <div class="grid grid-cols-2 gap-6">
-                    <div class="space-y-3">
-                        <label class="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-400">Frame</label>
-                        <select id="ratioSelect" onchange="setRatio(this.value)" class="ui-input w-full rounded-xl p-3.5 text-xs focus:outline-none appearance-none">
-                            <option value="4-5">4:5 FEED</option>
-                            <option value="9-16">9:16 STORY</option>
-                        </select>
-                    </div>
-                    <div class="space-y-3">
-                        <label class="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-400">Casing</label>
-                        <div class="flex bg-gray-100 p-1 rounded-xl">
-                            <button onclick="setTextCase('uppercase', this)" class="btn-toggle active flex-1 py-2 text-[8px] font-bold rounded-lg">CAPS</button>
-                            <button onclick="setTextCase('none', this)" class="btn-toggle flex-1 py-2 text-[8px] font-bold rounded-lg">AUTO</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Alignment -->
+                <!-- Background Mood -->
                 <div class="space-y-3">
-                    <label class="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-400">Alignment</label>
-                    <div class="grid grid-cols-4 gap-2 p-1 bg-gray-100 rounded-xl">
-                        <button onclick="setAlign('left', this)" class="btn-toggle flex-1 py-3 text-[9px] font-bold rounded-lg">LEFT</button>
-                        <button onclick="setAlign('center', this)" class="btn-toggle active flex-1 py-3 text-[9px] font-bold rounded-lg">CENTER</button>
-                        <button onclick="setAlign('right', this)" class="btn-toggle flex-1 py-3 text-[9px] font-bold rounded-lg">RIGHT</button>
-                        <button onclick="setAlign('justify', this)" class="btn-toggle flex-1 py-3 text-[9px] font-bold rounded-lg">BLOCK</button>
+                    <label class="text-[10px] font-black uppercase tracking-widest text-slate-400">Mood Backgrounds</label>
+                    <div class="grid grid-cols-5 gap-3">
+                        <div onclick="setBackground('solid', this)" class="bg-thumbnail active" style="background-color: #1c2c1a;"></div>
+                        <div onclick="setBackground('img1', this)" class="bg-thumbnail" style="background-image: url('https://cdn.midjourney.com/3ce0bc29-b944-4d3a-8ae6-e2604604ee12/0_3.png')"></div>
+                        <div onclick="setBackground('img2', this)" class="bg-thumbnail" style="background-image: url('https://cdn.midjourney.com/f2413950-910c-4009-b380-446d0a164728/0_0.png')"></div>
+                        <div onclick="setBackground('img3', this)" class="bg-thumbnail" style="background-image: url('https://cdn.midjourney.com/c0f64c21-24f7-4b4d-baf0-a1b84ed9e902/0_0.png')"></div>
+                        <div onclick="setBackground('white', this)" class="bg-thumbnail border-slate-100" style="background-color: #ffffff;"></div>
                     </div>
                 </div>
 
-                <!-- Download -->
-                <div class="pt-4">
-                    <button onclick="downloadImage()" class="w-full py-5 bg-[#bfff00] text-black font-black uppercase tracking-[0.4em] text-[10px] rounded-2xl shadow-xl shadow-lime-500/10 active:scale-[0.97] transition-all">
-                        CAPTURE FRAME
-                    </button>
+                <!-- Color & Align -->
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="space-y-3">
+                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400">Font Color</label>
+                        <div class="flex gap-2 p-1 bg-slate-50 rounded-2xl">
+                            <button onclick="setTextColor('#ffffff', this)" class="btn-toggle active flex-1 py-3 text-[9px]">WHITE</button>
+                            <button onclick="setTextColor('#1c2c1a', this)" class="btn-toggle flex-1 py-3 text-[9px]">DARK</button>
+                            <button onclick="setTextColor('#8eb500', this)" class="btn-toggle flex-1 py-3 text-[9px]">LIME</button>
+                        </div>
+                    </div>
+                    <div class="space-y-3">
+                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400">Alignment</label>
+                        <div class="grid grid-cols-4 gap-1 bg-slate-50 p-1 rounded-2xl">
+                            <button onclick="setAlign('left', this)" class="btn-toggle py-3 text-[9px]">L</button>
+                            <button onclick="setAlign('center', this)" class="btn-toggle active py-3 text-[9px]">C</button>
+                            <button onclick="setAlign('right', this)" class="btn-toggle py-3 text-[9px]">R</button>
+                            <button onclick="setAlign('justify', this)" class="btn-toggle py-3 text-[9px]">B</button>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- Sizing Refinement -->
+                <div class="bg-slate-50 p-6 rounded-3xl space-y-6">
+                    <label class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-4">Post Refinement</label>
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-4">
+                            <span class="text-[9px] font-bold text-slate-400 uppercase w-20">Font Size</span>
+                            <input type="range" id="fontSize" min="16" max="70" value="32" class="flex-1">
+                        </div>
+                        <div class="flex items-center gap-4 border-t border-slate-200 pt-4 mt-4">
+                            <span class="text-[9px] font-bold text-slate-400 uppercase w-20">Logo Scale</span>
+                            <input type="range" id="logoScale" min="20" max="100" value="28" class="flex-1">
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="text-[9px] font-bold text-slate-400 uppercase w-20">Author Size</span>
+                            <input type="range" id="authorScale" min="8" max="24" value="11" class="flex-1">
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="text-[9px] font-bold text-slate-400 uppercase w-20">Vertical Pos</span>
+                            <input type="range" id="contentY" min="-150" max="150" value="0" class="flex-1">
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="text-[9px] font-bold text-slate-400 uppercase w-20">Weight</span>
+                            <input type="range" id="fontWeight" min="300" max="900" step="100" value="700" class="flex-1">
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="text-[9px] font-bold text-slate-400 uppercase w-20">Line H</span>
+                            <input type="range" id="lineHeight" min="0.8" max="1.8" step="0.05" value="1.05" class="flex-1">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Canvas & Typography -->
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="space-y-3">
+                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400">Typography</label>
+                        <select id="fontSelect" onchange="setFont(this.value)" class="ui-input p-3 text-xs font-bold appearance-none">
+                            <option value="'DM Sans', sans-serif">DM Sans</option>
+                            <option value="'Playfair Display', serif">Playfair</option>
+                            <option value="'JetBrains Mono', monospace">Technical</option>
+                            <option value="'Caveat', cursive">Signature</option>
+                        </select>
+                    </div>
+                    <div class="space-y-3">
+                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400">Canvas Ratio</label>
+                        <select onchange="setRatio(this.value)" class="ui-input p-3 text-xs font-bold appearance-none">
+                            <option value="4-5">4:5 Feed</option>
+                            <option value="9-16">9:16 Story</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Casing -->
+                <div class="space-y-3">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-slate-400">Text Casing</label>
+                    <div class="flex bg-slate-100 p-1 rounded-2xl">
+                        <button onclick="setCase('lowercase', this)" class="btn-toggle active flex-1 py-3 text-[10px]">abc</button>
+                        <button onclick="setCase('none', this)" class="btn-toggle flex-1 py-3 text-[10px]">Aa</button>
+                        <button onclick="setCase('uppercase', this)" class="btn-toggle flex-1 py-3 text-[10px]">ABC</button>
+                    </div>
+                </div>
+
+                <button onclick="downloadImage()" class="w-full py-6 bg-[#8eb500] text-white font-black uppercase tracking-[0.4em] text-[10px] rounded-3xl shadow-xl active:scale-[0.98] transition-all">CAPTURE POST</button>
             </div>
         </aside>
     </div>
 
     <script>
         const quoteInput = document.getElementById('quoteInput');
-        const authorInput = document.getElementById('authorInput');
         const quoteDisplay = document.getElementById('quoteDisplay');
         const authorDisplay = document.getElementById('authorDisplay');
+        const authorInput = document.getElementById('authorInput');
+        const showAuthor = document.getElementById('showAuthor');
         const exportContainer = document.getElementById('exportContainer');
-        
-        const fontSizeInput = document.getElementById('fontSize');
-        const textWidthInput = document.getElementById('textWidth');
-        const weightInput = document.getElementById('fontWeight');
-        const lineHeightInput = document.getElementById('lineHeight');
-        const letterSpacingInput = document.getElementById('letterSpacing');
-        const charCount = document.getElementById('charCount');
+        const frameLogo = document.getElementById('frameLogo');
+        const contentMovable = document.getElementById('contentMovable');
 
         let highlightedIndices = new Set();
-        let currentRatio = '4-5';
-        let sigType = 'name';
+        let currentBg = 'solid';
+        let logoStyle = 'normal';
 
-        // Initial Content
-        quoteInput.value = "Design is not just what it looks like and feels like. Design is how it works. You have to start with the customer experience and work backwards to the technology. You can't start with the technology and try to figure out where you're going to try to sell it.";
-        authorInput.value = "Steve Jobs";
+        // Logos Data
+        const logoAssets = {
+            normal: {
+                standard: 'https://i.ibb.co/8L1v84zn/normal-logo.png',
+                whiteBg: 'https://i.ibb.co/QvfxFdQ8/normal-on-white-background.png'
+            },
+            wide: {
+                standard: 'https://i.ibb.co/cXCkntNf/wide-logo.png',
+                whiteBg: 'https://i.ibb.co/CpwWRT3n/wide-on-whitebackground.png'
+            }
+        };
+
+        // Initial Defaults
+        quoteInput.value = "true transformation happens when we align human curiosity with technological capability. we don't just build systems; we design experiences.";
+        authorInput.value = "Wynmind Team";
 
         function updatePreview() {
-            const text = quoteInput.value.trim() || "A moment of clarity.";
+            // Quote Logic
+            const text = quoteInput.value.trim() || "Start typing...";
             const words = text.split(/\s+/);
-            
-            charCount.innerText = `${quoteInput.value.length}/400`;
-            charCount.style.color = quoteInput.value.length > 360 ? '#ef4444' : '#9ca3af';
+            document.getElementById('charCount').innerText = `${quoteInput.value.length}/450`;
 
             quoteDisplay.innerHTML = '';
             words.forEach((word, index) => {
                 const span = document.createElement('span');
                 span.innerText = word;
                 span.className = 'word-btn ' + (highlightedIndices.has(index) ? 'highlight' : '');
-                
-                span.onpointerdown = (e) => {
-                    e.preventDefault();
-                    toggleHighlight(index);
-                };
-                
+                span.onpointerdown = (e) => { e.preventDefault(); toggleHighlight(index); };
                 quoteDisplay.appendChild(span);
                 quoteDisplay.appendChild(document.createTextNode(' '));
             });
 
-            if (sigType === 'domain') {
-                const domain = authorInput.value.toUpperCase().replace(/\s+/g, '');
-                authorDisplay.innerHTML = `<svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--lime)"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>${domain || 'SIRNEWSON.COM'}`;
+            // Author Logic
+            if (showAuthor.checked && authorInput.value.trim()) {
+                authorDisplay.innerText = `— ${authorInput.value.trim()}`;
+                authorDisplay.style.opacity = '0.8';
+                authorDisplay.style.visibility = 'visible';
             } else {
-                authorDisplay.innerText = authorInput.value ? `— ${authorInput.value}` : '';
+                authorDisplay.style.opacity = '0';
+                authorDisplay.style.visibility = 'hidden';
             }
+
+            updateLogo();
         }
 
-        function setSigType(type) {
-            sigType = type;
-            const btnName = document.getElementById('typeBtnName');
-            const btnDomain = document.getElementById('typeBtnDomain');
+        function updateLogo() {
+            const isWhiteBg = currentBg === 'white';
+            const variant = isWhiteBg ? 'whiteBg' : 'standard';
+            frameLogo.src = logoAssets[logoStyle][variant];
             
-            if (type === 'name') {
-                btnName.classList.add('active');
-                btnDomain.classList.remove('active');
+            // Only invert if it's the standard logo on a dark background
+            if (!isWhiteBg) {
+                frameLogo.classList.add('brightness-0', 'invert');
             } else {
-                btnDomain.classList.add('active');
-                btnName.classList.remove('active');
+                frameLogo.classList.remove('brightness-0', 'invert');
             }
-            updatePreview();
         }
 
         function toggleHighlight(index) {
-            if (highlightedIndices.has(index)) highlightedIndices.delete(index);
-            else highlightedIndices.add(index);
+            highlightedIndices.has(index) ? highlightedIndices.delete(index) : highlightedIndices.add(index);
             updatePreview();
         }
 
-        function setRatio(ratio) {
-            currentRatio = ratio;
-            exportContainer.className = `gradient-bg relative flex flex-col justify-center items-center overflow-hidden transition-all duration-500 aspect-${ratio}`;
+        function setLogoStyle(style, btn) {
+            logoStyle = style;
+            const btns = btn.parentElement.querySelectorAll('button');
+            btns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            updateLogo();
         }
 
-        function setFont(font) {
-            quoteDisplay.style.fontFamily = font;
+        function setBackground(type, btn) {
+            currentBg = type;
+            const bgMap = {
+                'solid': { color: '#1c2c1a', img: 'none' },
+                'img1': { color: 'transparent', img: "url('https://cdn.midjourney.com/3ce0bc29-b944-4d3a-8ae6-e2604604ee12/0_3.png')" },
+                'img2': { color: 'transparent', img: "url('https://cdn.midjourney.com/f2413950-910c-4009-b380-446d0a164728/0_0.png')" },
+                'img3': { color: 'transparent', img: "url('https://cdn.midjourney.com/c0f64c21-24f7-4b4d-baf0-a1b84ed9e902/0_0.png')" },
+                'white': { color: '#ffffff', img: 'none' }
+            };
+            exportContainer.style.backgroundColor = bgMap[type].color;
+            exportContainer.style.backgroundImage = bgMap[type].img;
+            document.querySelectorAll('.bg-thumbnail').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            updateLogo();
         }
 
-        function setTextCase(textCase, btn) {
-            quoteDisplay.style.textTransform = textCase;
+        function setTextColor(color, btn) {
+            document.documentElement.style.setProperty('--frame-text-color', color);
+            const isDark = color === '#1c2c1a';
+            exportContainer.classList.toggle('frame-light-overlay', isDark);
+            exportContainer.classList.toggle('frame-dark-overlay', !isDark);
             const btns = btn.parentElement.querySelectorAll('button');
             btns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
@@ -412,72 +416,61 @@
         function setAlign(align, btn) {
             quoteDisplay.classList.remove('align-justify');
             quoteDisplay.style.textAlign = align;
-            authorDisplay.style.textAlign = align === 'justify' ? 'center' : align;
-
-            if (align === 'justify') {
-                quoteDisplay.classList.add('align-justify');
-                quoteDisplay.style.textWrap = 'wrap';
-            } else {
-                quoteDisplay.style.textWrap = 'balance';
-            }
-            
+            authorDisplay.style.textAlign = align;
+            if (align === 'justify') quoteDisplay.classList.add('align-justify');
             const btns = btn.parentElement.querySelectorAll('button');
             btns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
         }
 
-        fontSizeInput.oninput = (e) => {
-            quoteDisplay.style.fontSize = `${e.target.value}px`;
-        };
-        textWidthInput.oninput = (e) => {
-            quoteDisplay.style.width = `${e.target.value}%`;
-        };
-        weightInput.oninput = (e) => {
-            quoteDisplay.style.fontWeight = e.target.value;
-        };
-        lineHeightInput.oninput = (e) => {
-            quoteDisplay.style.lineHeight = e.target.value;
-        };
-        letterSpacingInput.oninput = (e) => {
-            quoteDisplay.style.letterSpacing = `${e.target.value}em`;
-        };
+        function setCase(c, btn) {
+            quoteDisplay.style.textTransform = c;
+            const btns = btn.parentElement.querySelectorAll('button');
+            btns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        function setRatio(r) {
+            exportContainer.classList.remove('aspect-4-5', 'aspect-9-16');
+            exportContainer.classList.add(`aspect-${r}`);
+        }
+        
+        function setFont(f) { quoteDisplay.style.fontFamily = f; }
+
+        // Slider Listeners
+        document.getElementById('fontSize').oninput = (e) => quoteDisplay.style.fontSize = `${e.target.value}px`;
+        document.getElementById('fontWeight').oninput = (e) => quoteDisplay.style.fontWeight = e.target.value;
+        document.getElementById('lineHeight').oninput = (e) => quoteDisplay.style.lineHeight = e.target.value;
+        document.getElementById('logoScale').oninput = (e) => frameLogo.style.height = `${e.target.value}px`;
+        document.getElementById('authorScale').oninput = (e) => authorDisplay.style.fontSize = `${e.target.value}px`;
+        document.getElementById('contentY').oninput = (e) => contentMovable.style.transform = `translateY(${e.target.value}px)`;
 
         quoteInput.oninput = updatePreview;
         authorInput.oninput = updatePreview;
 
         async function downloadImage() {
             const btn = event.currentTarget;
-            const original = btn.innerText;
             btn.innerText = "CAPTURING...";
             btn.disabled = true;
-
             try {
                 const canvas = await html2canvas(exportContainer, {
                     scale: 3, 
-                    backgroundColor: '#011111',
                     useCORS: true,
-                    logging: false
+                    backgroundColor: currentBg === 'white' ? '#ffffff' : '#1c2c1a'
                 });
-
                 const link = document.createElement('a');
-                link.download = `drift-${Date.now()}.png`;
+                link.download = `wynmind-post-${Date.now()}.png`;
                 link.href = canvas.toDataURL('image/png', 1.0);
                 link.click();
-            } catch (err) {
-                console.error("Export Error", err);
-            } finally {
-                btn.innerText = original;
-                btn.disabled = false;
-            }
+            } catch (err) { console.error(err); }
+            finally { btn.innerText = "CAPTURE POST"; btn.disabled = false; }
         }
 
-        updatePreview();
-        quoteDisplay.style.fontSize = "32px";
-        quoteDisplay.style.width = "90%";
-        quoteDisplay.style.textAlign = "center";
-        authorDisplay.style.textAlign = "center";
-        quoteDisplay.style.lineHeight = "1.05";
-        quoteDisplay.style.letterSpacing = "-0.02em";
+        window.onload = () => {
+            updatePreview();
+            quoteDisplay.style.textTransform = "lowercase";
+            setTextColor('#ffffff', document.querySelector('.btn-toggle.active'));
+        };
     </script>
 </body>
 </html>
