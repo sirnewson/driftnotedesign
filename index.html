@@ -49,7 +49,7 @@
             justify-content: center;
             align-items: center;
             overflow: hidden;
-            padding: 0 6%; /* Reduced side padding to give text layer more room */
+            padding: 0 6%;
             transition: background 0.5s ease;
             box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.3);
             background-size: cover;
@@ -84,11 +84,12 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            transform-origin: center center;
         }
 
         .quote-text {
             color: var(--frame-text-color);
-            width: 100%; /* Controlled by slider */
+            width: 100%;
             text-wrap: wrap; 
             transition: width 0.2s ease, font-size 0.2s ease, font-weight 0.2s ease;
             margin-left: auto;
@@ -244,6 +245,14 @@
                     <label class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-4">Post Refinement</label>
                     <div class="space-y-4">
                         <div class="flex items-center gap-4">
+                            <span class="text-[9px] font-bold text-slate-400 uppercase w-20">Overall Scale</span>
+                            <input type="range" id="overallScale" min="50" max="200" value="100" class="flex-1">
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="text-[9px] font-bold text-slate-400 uppercase w-20">Vertical Pos</span>
+                            <input type="range" id="contentY" min="-250" max="250" value="0" class="flex-1">
+                        </div>
+                        <div class="flex items-center gap-4 border-t border-slate-200 pt-4 mt-4">
                             <span class="text-[9px] font-bold text-slate-400 uppercase w-20">Font Size</span>
                             <input type="range" id="fontSize" min="12" max="70" value="24" class="flex-1">
                         </div>
@@ -258,10 +267,6 @@
                         <div class="flex items-center gap-4">
                             <span class="text-[9px] font-bold text-slate-400 uppercase w-20">Author Size</span>
                             <input type="range" id="authorScale" min="8" max="24" value="11" class="flex-1">
-                        </div>
-                        <div class="flex items-center gap-4">
-                            <span class="text-[9px] font-bold text-slate-400 uppercase w-20">Vertical Pos</span>
-                            <input type="range" id="contentY" min="-250" max="250" value="0" class="flex-1">
                         </div>
                         <div class="flex items-center gap-4">
                             <span class="text-[9px] font-bold text-slate-400 uppercase w-20">Weight</span>
@@ -327,6 +332,8 @@
         let highlightedIndices = new Set();
         let currentBg = 'solid';
         let logoStyle = 'normal';
+        let currentY = 0;
+        let currentScale = 1;
 
         const logoAssets = {
             normal: {
@@ -444,13 +451,26 @@
         
         function setFont(f) { quoteDisplay.style.fontFamily = f; }
 
+        function updateContentTransform() {
+            contentMovable.style.transform = `translateY(${currentY}px) scale(${currentScale})`;
+        }
+
+        document.getElementById('overallScale').oninput = (e) => {
+            currentScale = e.target.value / 100;
+            updateContentTransform();
+        };
+
+        document.getElementById('contentY').oninput = (e) => {
+            currentY = e.target.value;
+            updateContentTransform();
+        };
+
         document.getElementById('fontSize').oninput = (e) => quoteDisplay.style.fontSize = `${e.target.value}px`;
         document.getElementById('textWidth').oninput = (e) => quoteDisplay.style.width = `${e.target.value}%`;
         document.getElementById('fontWeight').oninput = (e) => quoteDisplay.style.fontWeight = e.target.value;
         document.getElementById('lineHeight').oninput = (e) => quoteDisplay.style.lineHeight = e.target.value;
         document.getElementById('logoScale').oninput = (e) => frameLogo.style.height = `${e.target.value}px`;
         document.getElementById('authorScale').oninput = (e) => authorDisplay.style.fontSize = `${e.target.value}px`;
-        document.getElementById('contentY').oninput = (e) => contentMovable.style.transform = `translateY(${e.target.value}px)`;
 
         quoteInput.oninput = updatePreview;
         authorInput.oninput = updatePreview;
