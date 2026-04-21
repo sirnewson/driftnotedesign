@@ -49,7 +49,7 @@
             justify-content: center;
             align-items: center;
             overflow: hidden;
-            padding: 0 10%;
+            padding: 0 6%; /* Reduced side padding to give text layer more room */
             transition: background 0.5s ease;
             box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.3);
             background-size: cover;
@@ -88,12 +88,14 @@
 
         .quote-text {
             color: var(--frame-text-color);
-            width: 100%;
-            text-wrap: wrap;
+            width: 100%; /* Controlled by slider */
+            text-wrap: wrap; 
             transition: width 0.2s ease, font-size 0.2s ease, font-weight 0.2s ease;
             margin-left: auto;
             margin-right: auto;
             display: block;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
         .quote-text.align-justify {
@@ -247,7 +249,7 @@
                         </div>
                         <div class="flex items-center gap-4">
                             <span class="text-[9px] font-bold text-slate-400 uppercase w-20">Text Width</span>
-                            <input type="range" id="textWidth" min="40" max="100" value="90" class="flex-1">
+                            <input type="range" id="textWidth" min="20" max="100" value="95" class="flex-1">
                         </div>
                         <div class="flex items-center gap-4 border-t border-slate-200 pt-4 mt-4">
                             <span class="text-[9px] font-bold text-slate-400 uppercase w-20">Logo Scale</span>
@@ -259,7 +261,7 @@
                         </div>
                         <div class="flex items-center gap-4">
                             <span class="text-[9px] font-bold text-slate-400 uppercase w-20">Vertical Pos</span>
-                            <input type="range" id="contentY" min="-150" max="150" value="0" class="flex-1">
+                            <input type="range" id="contentY" min="-250" max="250" value="0" class="flex-1">
                         </div>
                         <div class="flex items-center gap-4">
                             <span class="text-[9px] font-bold text-slate-400 uppercase w-20">Weight</span>
@@ -343,12 +345,7 @@
         function updatePreview() {
             const text = quoteInput.value.trim() || "Start typing...";
             const words = text.split(/\s+/);
-            
-            // Character counter logic updated for 800 character limit
-            const currentLen = quoteInput.value.length;
-            const charCounterEl = document.getElementById('charCount');
-            charCounterEl.innerText = `${currentLen}/800`;
-            charCounterEl.style.color = currentLen > 720 ? '#ef4444' : '#94a3b8';
+            document.getElementById('charCount').innerText = `${quoteInput.value.length}/800`;
 
             quoteDisplay.innerHTML = '';
             words.forEach((word, index) => {
@@ -480,9 +477,9 @@
             updatePreview();
             quoteDisplay.style.textTransform = "lowercase";
             
-            // Set initial style values
+            // Default values that provide more horizontal space
             quoteDisplay.style.fontSize = "24px";
-            quoteDisplay.style.width = "90%";
+            quoteDisplay.style.width = "95%"; 
             quoteDisplay.style.fontWeight = "500";
             quoteDisplay.style.lineHeight = "1.1";
             
